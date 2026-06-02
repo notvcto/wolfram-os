@@ -5,6 +5,8 @@
 //! If you're reading this, you're either debugging something horrible
 //! or you're curious. Either way, welcome.
 
+#![allow(dead_code)]
+
 use core::marker::PhantomData;
 use core::sync::atomic::{AtomicBool, Ordering};
 

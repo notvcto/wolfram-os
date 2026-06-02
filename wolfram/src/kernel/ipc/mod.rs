@@ -5,4 +5,5 @@
 pub mod channel;
 pub mod fastcall;
 
+#[allow(dead_code)]
 pub fn init() {}

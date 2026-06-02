@@ -6,6 +6,7 @@
 
 use crate::arch::riscv64::trap::TrapFrame;
 
+#[allow(dead_code)]
 pub fn dispatch(_nr: usize, _frame: &mut TrapFrame) {
     // Phase 2
 }
