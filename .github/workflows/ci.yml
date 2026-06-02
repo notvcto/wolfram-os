@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build kernel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: riscv64gc-unknown-none-elf
+          components: rust-src, llvm-tools-preview
+
+      - name: Build
+        working-directory: wolfram
+        run: cargo build
+
+      - name: Check (warnings as errors)
+        working-directory: wolfram
+        run: cargo clippy -- -D warnings

@@ -1,0 +1,7 @@
+target/
+wolfram/target/
+.DS_Store
+*.swp
+*.swo
+*.img
+*.iso
