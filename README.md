@@ -139,8 +139,8 @@ Current: **Uranium-238** (nightly — first boots, nothing works yet, that's fin
 **Phase 1 — Boots (now)**
 - [ ] Bootloader handoff via RISC-V SBI
 - [ ] Serial output
-- [ ] Physical memory detection
-- [ ] Bitmap allocator
+- [x] Physical memory detection
+- [x] Bitmap allocator
 - [ ] Basic trap handling
 - [ ] Doesn't triple fault
 
@@ -196,6 +196,11 @@ make debug   # boots with GDB server on :1234
 Right now `make run` boots, prints something to serial, and probably panics.
 That's expected. That's Phase 1.
 
+The boot allocator reads RAM from the firmware device tree and manages the bank
+containing the kernel (up to 4 GiB). It keeps the kernel image, device tree, and
+firmware-declared reserved ranges unavailable for allocation. Boot currently
+stops at the expected `spawn init` panic; init is planned for Phase 3.
+
 ---
 
 ## Contributing
@@ -217,5 +222,4 @@ open an issue marked `[SECURITY]` and be detailed.
 ## License
 
 GPL v2. Same as Linux. Derivatives stay open.
-
 
