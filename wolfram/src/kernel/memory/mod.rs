@@ -4,6 +4,6 @@
 pub mod vmo;
 pub mod bitmap;
 
-pub fn init() {
-    bitmap::init();
+pub fn init(device_tree: usize) -> bitmap::MemoryStats {
+    bitmap::init(device_tree)
 }
