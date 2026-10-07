@@ -218,7 +218,4 @@ open an issue marked `[SECURITY]` and be detailed.
 
 GPL v2. Same as Linux. Derivatives stay open.
 
----
 
-*Wolfram. Tungsten melts at 3422°C.*
-*W —*
