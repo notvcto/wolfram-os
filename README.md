@@ -2,7 +2,8 @@
 
 > A capability-based microkernel. Zero ambient authority. Programs earn every resource they touch.
 
-Wolfram is a microkernel operating system written in Rust, targeting RISC-V 64-bit hardware first.
+Wolfram is a microkernel operating system written in Rust. RISC-V 64 is its
+current QEMU reference port; x86-64 UEFI is the next physical-hardware target.
 It is not a Linux distribution. It is not a fork. It is a kernel built from first principles around
 one idea: **programs should not have access to anything they weren't explicitly given.**
 
@@ -40,7 +41,7 @@ Wolfram Kernel (microkernel)
 ├── Scheduler                  — jobs → processes → threads. no fork. no ambient inheritance.
 ├── IPC                        — async channels + FastCall. handle transfer is move semantics.
 ├── Memory                     — VMO-everything. no anonymous memory. hardware-enforced rights.
-└── HAL                        — architecture abstraction. RISC-V first. ARM64 later.
+└── HAL                        — architecture abstraction. RISC-V and x86-64 first.
 
 Ferrum (userspace foundation)
 ├── libc port                  — musl-based, Wolfram syscall ABI
@@ -136,13 +137,24 @@ Current: **Uranium-238** (nightly — first boots, nothing works yet, that's fin
 
 ## Roadmap
 
-**Phase 1 — Boots (now)**
-- [ ] Bootloader handoff via RISC-V SBI
-- [ ] Serial output
-- [x] Physical memory detection
-- [x] Bitmap allocator
-- [ ] Basic trap handling
-- [ ] Doesn't triple fault
+**Phase 1 — Reliable boots (now)**
+
+RISC-V 64 QEMU reference:
+- [x] OpenSBI handoff and early serial output in QEMU
+- [x] Device-tree physical memory detection and bitmap allocator
+- [ ] Exercise and correct trap handling and multi-hart startup
+- [ ] Repeatable boot smoke check at multiple RAM sizes
+
+x86-64 UEFI PC target:
+- [ ] Common boot information and architecture boundary
+- [ ] UEFI loader and framebuffer diagnostics in QEMU/OVMF
+- [ ] Firmware memory map, reserved ranges, and boot allocator
+- [ ] Basic exception handling and expected panic in QEMU/OVMF
+- [ ] USB boot to the same diagnostics on the MSI B650M-A PRO WIFI
+
+See the [Phase 1 boot plan](docs/boot-plan.md) for sequence and acceptance
+criteria. Phase 1 is complete when both QEMU ports and the MSI test machine
+reach a diagnosed, intentional panic without a silent reset.
 
 **Phase 2 — Kernel Core**
 - [ ] Capability system
@@ -178,7 +190,7 @@ It will take years. That's fine.
 
 ---
 
-## Building
+## Building the RISC-V reference port
 
 Requirements:
 - Rust nightly (we use features that aren't stable yet — appropriate for a kernel)
@@ -193,13 +205,14 @@ make run     # boots in QEMU
 make debug   # boots with GDB server on :1234
 ```
 
-Right now `make run` boots, prints something to serial, and probably panics.
-That's expected. That's Phase 1.
+Right now `make run` boots in QEMU, prints to serial, and reaches the expected
+`spawn init` panic. The x86-64 UEFI build and USB boot path are planned in
+[docs/boot-plan.md](docs/boot-plan.md).
 
 The boot allocator reads RAM from the firmware device tree and manages the bank
 containing the kernel (up to 4 GiB). It keeps the kernel image, device tree, and
-firmware-declared reserved ranges unavailable for allocation. Boot currently
-stops at the expected `spawn init` panic; init is planned for Phase 3.
+firmware-declared reserved ranges unavailable for allocation. Init is planned
+for Phase 3.
 
 ---
 
@@ -222,4 +235,3 @@ open an issue marked `[SECURITY]` and be detailed.
 ## License
 
 GPL v2. Same as Linux. Derivatives stay open.
-
