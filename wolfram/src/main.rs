@@ -18,7 +18,7 @@ use core::panic::PanicInfo;
 core::arch::global_asm!(include_str!("arch/riscv64/boot.S"));
 
 #[no_mangle]
-pub extern "C" fn kernel_main() -> ! {
+pub extern "C" fn kernel_main(_hart_id: usize, device_tree: usize) -> ! {
     arch::init();
 
     kprintln!("W — good morning. probably.");
@@ -27,7 +27,13 @@ pub extern "C" fn kernel_main() -> ! {
     kprintln!("capability-based microkernel — RISC-V 64");
     kprintln!();
 
-    kernel::memory::init();
+    let memory = kernel::memory::init(device_tree);
+    kprintln!("[mem]   RAM: {:#x}..{:#x}, {} free pages",
+              memory.start, memory.end, memory.free_pages);
+    let probe = kernel::memory::bitmap::allocate_frame()
+        .expect("physical allocator has no free frames");
+    kernel::memory::bitmap::free_frame(probe)
+        .expect("physical allocator failed to release probe frame");
     kprintln!("[mem]   physical allocator: ok");
 
     kernel::capabilities::init();
