@@ -11,23 +11,46 @@
 #![feature(alloc_error_handler)]
 
 mod arch;
+mod boot_info;
 mod kernel;
 
 use core::panic::PanicInfo;
 
+#[cfg(target_arch = "riscv64")]
 core::arch::global_asm!(include_str!("arch/riscv64/boot.S"));
 
+#[cfg(target_arch = "x86_64")]
+core::arch::global_asm!(include_str!("arch/x86_64/boot.S"));
+
+#[cfg(target_arch = "riscv64")]
 #[no_mangle]
 pub extern "C" fn kernel_main(_hart_id: usize, device_tree: usize) -> ! {
     arch::init();
+    kernel_start("RISC-V 64", || kernel::memory::init(device_tree))
+}
 
+#[cfg(target_arch = "x86_64")]
+#[no_mangle]
+/// # Safety
+/// The loader must pass a readable, identity-mapped `BootInfo` that remains
+/// live until memory initialization finishes.
+pub unsafe extern "C" fn kernel_main(boot_info: *const boot_info::BootInfo) -> ! {
+    let info = unsafe { boot_info.as_ref() }.expect("missing boot information");
+    arch::init(info);
+    kernel_start("x86-64", || kernel::memory::init_from_boot_info(info))
+}
+
+fn kernel_start(
+    board: &str,
+    init_memory: impl FnOnce() -> kernel::memory::bitmap::MemoryStats,
+) -> ! {
     kprintln!("W — good morning. probably.");
     kprintln!();
     kprintln!("Wolfram/0.1.0 (Uranium-238)");
-    kprintln!("capability-based microkernel — RISC-V 64");
+    kprintln!("capability-based microkernel — {}", board);
     kprintln!();
 
-    let memory = kernel::memory::init(device_tree);
+    let memory = init_memory();
     kprintln!(
         "[mem]   RAM: {:#x}..{:#x}, {} free pages",
         memory.start,
@@ -43,14 +66,26 @@ pub extern "C" fn kernel_main(_hart_id: usize, device_tree: usize) -> ! {
     kprintln!("[mem]   physical allocator: ok");
 
     kernel::capabilities::init();
-    kprintln!("[cap]   capability system: ok");
+    kprintln!("[cap]   capability system: planned for Phase 2");
 
     kprintln!();
-    kprintln!("kernel initialized.");
-    kprintln!("spawning init...");
-    kprintln!();
+    kprintln!("Phase 1 boot checks complete.");
 
-    todo!("spawn init — Phase 3")
+    #[cfg(all(target_arch = "x86_64", feature = "x86-exception-probe"))]
+    {
+        kprintln!("probing x86 invalid-opcode exception...");
+        // SAFETY: this opt-in QEMU build deliberately enters vector 6 to
+        // exercise the installed IDT and its panic diagnostics.
+        unsafe { core::arch::asm!("ud2", options(noreturn)) }
+    }
+
+    #[cfg(not(all(target_arch = "x86_64", feature = "x86-exception-probe")))]
+    {
+        kprintln!("spawning init...");
+        kprintln!();
+
+        todo!("spawn init — Phase 3")
+    }
 }
 
 #[panic_handler]
