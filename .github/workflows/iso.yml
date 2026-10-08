@@ -50,6 +50,6 @@ jobs:
         with:
           tag_name: ${{ inputs.publish_release_tag || github.ref_name }}
           name: ${{ inputs.publish_release_tag || github.ref_name }}
-          generate_release_notes: true
+          body_path: docs/releases/${{ inputs.publish_release_tag || github.ref_name }}.md
           overwrite_files: true
           files: wolfram.iso
