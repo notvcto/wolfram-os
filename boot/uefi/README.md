@@ -42,3 +42,11 @@ Run `make x86-smoke` from the repository root to repeat the debug and release
 boot checks and an opt-in invalid-opcode exception probe. The smoke script
 builds its kernels in a temporary target directory, so its deliberate fault
 image cannot replace the ordinary kernel intended for a USB stick.
+
+For an optical-media QEMU test, install `libisoburn`, `dosfstools`, and
+`mtools` (Arch package names), then run `make x86-iso`. This creates an ignored
+`wolfram.iso` at the repository root. It embeds a FAT El Torito image with both
+the UEFI loader and `WOLFRAM.ELF`; placing the ELF only in the ISO filesystem
+would not work because the loader reads from its own FAT filesystem. Boot it
+with QEMU/OVMF using `-cdrom wolfram.iso -boot order=d`. The ISO tests the CD
+boot path; the MSI USB test still uses a FAT32 partition with the two files.
