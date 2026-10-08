@@ -2,6 +2,7 @@
 //! The kernel core never imports from here directly.
 //! Everything goes through the HAL boundary.
 
+pub mod device_tree;
 pub mod serial;
 pub mod trap;
 
