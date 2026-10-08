@@ -2,7 +2,8 @@
 
 > A capability-based microkernel. Zero ambient authority. Programs earn every resource they touch.
 
-Wolfram is a microkernel operating system written in Rust, targeting RISC-V 64-bit hardware first.
+Wolfram is a microkernel operating system written in Rust. RISC-V 64 is its
+current QEMU reference port; x86-64 UEFI is the next physical-hardware target.
 It is not a Linux distribution. It is not a fork. It is a kernel built from first principles around
 one idea: **programs should not have access to anything they weren't explicitly given.**
 
@@ -40,7 +41,7 @@ Wolfram Kernel (microkernel)
 ├── Scheduler                  — jobs → processes → threads. no fork. no ambient inheritance.
 ├── IPC                        — async channels + FastCall. handle transfer is move semantics.
 ├── Memory                     — VMO-everything. no anonymous memory. hardware-enforced rights.
-└── HAL                        — architecture abstraction. RISC-V first. ARM64 later.
+└── HAL                        — architecture abstraction. RISC-V and x86-64 first.
 
 Ferrum (userspace foundation)
 ├── libc port                  — musl-based, Wolfram syscall ABI
@@ -130,19 +131,43 @@ Wolfram uses element names for releases.
 | RC | Fluorine, Chlorine, Bromine | Getting closer. Still sharp edges. |
 | Stable | Helium, Neon, Argon, Krypton, Xenon | Inert. Doesn't react. Ships. |
 
-Current: **Uranium-238** (nightly — first boots, nothing works yet, that's fine)
+First release: **Uranium-238** (nightly). Phase 1 has reached its first
+hardware milestone on the MSI B650M-A PRO WIFI; the release tag identifies
+that milestone, not a feature-complete or security-complete system.
 
 ---
 
 ## Roadmap
 
-**Phase 1 — Boots (now)**
-- [ ] Bootloader handoff via RISC-V SBI
-- [ ] Serial output
-- [ ] Physical memory detection
-- [ ] Bitmap allocator
-- [ ] Basic trap handling
-- [ ] Doesn't triple fault
+**Phase 1 — Reliable boots (now)**
+
+RISC-V 64 QEMU reference:
+- [x] OpenSBI handoff and early serial output in QEMU
+- [x] Device-tree physical memory detection and bitmap allocator
+- [x] Exercise trap handling and park secondary harts before the boot stack
+- [x] Repeatable QEMU smoke check at 128 and 256 MiB with four harts
+
+x86-64 UEFI PC target:
+- [x] Common boot information and architecture boundary
+- [x] UEFI loader and framebuffer diagnostics in QEMU/OVMF
+- [x] Firmware memory map handoff and boot allocator probe in QEMU/OVMF
+- [x] Expected `spawn init` panic in debug and release QEMU/OVMF builds
+- [x] Exercise unexpected x86 exceptions and verify their diagnostics
+- [x] Repeatable x86 QEMU smoke check for debug, release, and exception builds
+<<<<<<< HEAD
+- [ ] USB boot to the same diagnostics on bare metal
+
+See the [Phase 1 boot plan](docs/boot-plan.md) for sequence and acceptance
+criteria. Phase 1 is complete when both QEMU ports and the test machine
+reach a diagnosed, intentional panic without a silent reset.
+=======
+- [x] USB boot, memory allocation, and the expected diagnosed panic on the MSI
+  B650M-A PRO WIFI
+
+See the [Phase 1 boot plan](docs/boot-plan.md) for sequence and acceptance
+criteria. Phase 1 boot acceptance is complete: both QEMU ports and the MSI
+test machine reach a diagnosed, intentional panic without a silent reset.
+>>>>>>> f815c32 (chore: ci/cd cleanup)
 
 **Phase 2 — Kernel Core**
 - [ ] Capability system
@@ -178,7 +203,7 @@ It will take years. That's fine.
 
 ---
 
-## Building
+## Building the RISC-V reference port
 
 Requirements:
 - Rust nightly (we use features that aren't stable yet — appropriate for a kernel)
@@ -188,13 +213,25 @@ Requirements:
 
 ```bash
 git clone https://github.com/notvcto/wolfram-os
-cd wolfram
+cd wolfram-os
 make run     # boots in QEMU
 make debug   # boots with GDB server on :1234
 ```
 
-Right now `make run` boots, prints something to serial, and probably panics.
-That's expected. That's Phase 1.
+Right now `make run` boots in QEMU, prints to serial, and reaches the expected
+`spawn init` panic.
+
+The boot allocator reads RAM from the firmware device tree and manages the bank
+containing the kernel (up to 4 GiB). It keeps the kernel image, device tree, and
+firmware-declared reserved ranges unavailable for allocation. Init is planned
+for Phase 3.
+
+The x86-64 kernel and UEFI loader reach the expected panic in QEMU/OVMF with
+debug and release kernel builds. `make x86-smoke` also checks a deliberate
+invalid-opcode exception and its panic diagnostics. `scripts/x86-preview.sh`
+builds the actual bare-metal kernel and checks the ELF that the loader expects;
+see the [UEFI loader notes](boot/uefi/README.md) for build and packaging steps.
+The test board has not booted this path yet.
 
 ---
 
@@ -217,5 +254,3 @@ open an issue marked `[SECURITY]` and be detailed.
 ## License
 
 GPL v2. Same as Linux. Derivatives stay open.
-
-
