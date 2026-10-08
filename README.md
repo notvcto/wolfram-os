@@ -139,7 +139,7 @@ that milestone, not a feature-complete or security-complete system.
 
 ## Roadmap
 
-**Phase 1 — Reliable boots (now)**
+**Phase 1 — Reliable boots (complete)**
 
 RISC-V 64 QEMU reference:
 - [x] OpenSBI handoff and early serial output in QEMU
@@ -223,7 +223,8 @@ debug and release kernel builds. `make x86-smoke` also checks a deliberate
 invalid-opcode exception and its panic diagnostics. `scripts/x86-preview.sh`
 builds the actual bare-metal kernel and checks the ELF that the loader expects;
 see the [UEFI loader notes](boot/uefi/README.md) for build and packaging steps.
-The test board has not booted this path yet.
+The MSI B650M-A PRO WIFI has booted this path from USB, initialized the
+physical allocator, and reached the expected diagnosed panic.
 
 ---
 
