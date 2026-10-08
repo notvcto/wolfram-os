@@ -10,6 +10,11 @@ repository = "https://github.com/notvcto/wolfram-os"
 [dependencies]
 bitflags = { version = "2.6", default-features = false }
 
+[features]
+# Emulator-only diagnostics. Ordinary firmware and hardware builds use neither.
+qemu-debug-port = []
+x86-exception-probe = ["qemu-debug-port"]
+
 [profile.dev]
 panic = "abort"
 opt-level = 1
