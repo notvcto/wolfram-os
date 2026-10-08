@@ -7,6 +7,12 @@ on:
     tags:
       - 'Uranium-*'
   workflow_dispatch:
+    inputs:
+      publish_release_tag:
+        description: Existing or new release tag to attach the ISO to (blank builds an artifact only)
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write
@@ -34,14 +40,16 @@ jobs:
       - name: Upload ISO artifact
         uses: actions/upload-artifact@v4
         with:
-          name: wolfram-${{ github.ref_name }}-uefi-iso
+          name: wolfram-${{ inputs.publish_release_tag || github.ref_name }}-uefi-iso
           path: wolfram.iso
           if-no-files-found: error
 
       - name: Publish GitHub release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') || inputs.publish_release_tag != ''
         uses: softprops/action-gh-release@v2
         with:
-          name: ${{ github.ref_name }}
+          tag_name: ${{ inputs.publish_release_tag || github.ref_name }}
+          name: ${{ inputs.publish_release_tag || github.ref_name }}
           generate_release_notes: true
+          overwrite_files: true
           files: wolfram.iso
