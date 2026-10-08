@@ -131,8 +131,9 @@ Wolfram uses element names for releases.
 | RC | Fluorine, Chlorine, Bromine | Getting closer. Still sharp edges. |
 | Stable | Helium, Neon, Argon, Krypton, Xenon | Inert. Doesn't react. Ships. |
 
-Planned first release: **Uranium-238** (nightly). No release tag yet; Phase 1
-boot checks must pass first.
+First release: **Uranium-238** (nightly). Phase 1 has reached its first
+hardware milestone on the MSI B650M-A PRO WIFI; the release tag identifies
+that milestone, not a feature-complete or security-complete system.
 
 ---
 
@@ -153,11 +154,12 @@ x86-64 UEFI PC target:
 - [x] Expected `spawn init` panic in debug and release QEMU/OVMF builds
 - [x] Exercise unexpected x86 exceptions and verify their diagnostics
 - [x] Repeatable x86 QEMU smoke check for debug, release, and exception builds
-- [ ] USB boot to the same diagnostics on the MSI B650M-A PRO WIFI
+- [x] USB boot, memory allocation, and the expected diagnosed panic on the MSI
+  B650M-A PRO WIFI
 
 See the [Phase 1 boot plan](docs/boot-plan.md) for sequence and acceptance
-criteria. Phase 1 is complete when both QEMU ports and the MSI test machine
-reach a diagnosed, intentional panic without a silent reset.
+criteria. Phase 1 boot acceptance is complete: both QEMU ports and the MSI
+test machine reach a diagnosed, intentional panic without a silent reset.
 
 **Phase 2 — Kernel Core**
 - [ ] Capability system
