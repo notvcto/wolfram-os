@@ -18,6 +18,8 @@ pub struct TrapFrame {
     pub sepc: usize,
 }
 
+const _: () = assert!(core::mem::size_of::<TrapFrame>() == 32 * 8);
+
 #[no_mangle]
 extern "C" fn kernel_trap_handler(frame: &mut TrapFrame) {
     let scause: usize;
@@ -31,14 +33,15 @@ extern "C" fn kernel_trap_handler(frame: &mut TrapFrame) {
     let code = scause & !(1 << 63);
 
     if is_interrupt {
-        match code {
-            1 => {}  // supervisor software interrupt
-            5 => {}  // supervisor timer
-            9 => {}  // supervisor external
-            _ => panic!("unknown interrupt: {}", code),
-        }
+        // No interrupt controller is initialized yet. Returning without
+        // acknowledging the source would immediately trap again.
+        panic!("unhandled interrupt: cause={} sepc={:#x}", code, frame.sepc);
     } else {
         match code {
+            3 if frame.sepc == kernel_trap_probe_breakpoint as *const () as usize => {
+                frame.a0 += 1;
+                frame.sepc += 4;
+            }
             8 | 9 => {
                 // ecall — syscall dispatch (Phase 2)
                 frame.sepc += 4;
@@ -51,6 +54,11 @@ extern "C" fn kernel_trap_handler(frame: &mut TrapFrame) {
     }
 }
 
+extern "C" {
+    fn kernel_trap_probe() -> usize;
+    fn kernel_trap_probe_breakpoint();
+}
+
 pub fn init() {
     extern "C" { fn kernel_trap_entry(); }
     unsafe {
@@ -58,5 +66,6 @@ pub fn init() {
             "csrw stvec, {}",
             in(reg) kernel_trap_entry as *const () as usize,
         );
+        assert_eq!(kernel_trap_probe(), 1, "RISC-V trap frame probe failed");
     }
 }
