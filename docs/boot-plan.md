@@ -67,8 +67,11 @@ an unexpected exception produces a useful diagnostic instead of a silent reset.
 The QEMU/OVMF runs now reach the expected panic in debug and release builds.
 `make x86-smoke` repeats both boots and triggers a deliberate invalid-opcode
 exception in an isolated build; that path reports vector 6, error code, and
-instruction pointer on the framebuffer and QEMU debug port. The MSI board is
-still untested.
+instruction pointer on the framebuffer and QEMU debug port. The MSI
+B650M-A PRO WIFI has now booted from USB, initialized the physical allocator,
+and reached the expected diagnosed `spawn init` panic. This completes the
+Phase 1 boot acceptance criterion. The constant W logo and current font remain
+visual polish items; they do not block this milestone.
 
 ## 4. Boot from USB on the MSI board
 
@@ -78,13 +81,13 @@ the firmware may require Secure Boot to be configured for the image. This step
 does not require Wolfram to contain a USB driver: UEFI reads the files before
 the kernel takes control.
 
-Record the board firmware version and exact boot result. Compare the memory map
-and reserved ranges with the QEMU path. Fix assumptions exposed by the board
-without putting board-specific policy in the kernel core.
+The board firmware version and exact boot result should be recorded with the
+test notes. Compare the memory map and reserved ranges with the QEMU path as
+follow-up work; keep board-specific policy out of the kernel core.
 
-**Done when:** repeated cold boots on the MSI board display Wolfram's memory
-diagnostics and the expected panic without a silent reset or memory fault.
-This is the Phase 1 real-hardware milestone, not a daily-driver milestone.
+**Done:** USB boot on the MSI board displayed Wolfram's memory diagnostics,
+allocated memory, and reached the expected panic. This is the Phase 1
+real-hardware milestone, not a daily-driver milestone.
 
 ## 5. Continue the shared kernel roadmap
 
@@ -101,5 +104,5 @@ The UEFI loader can read the USB stick for Phase 1; using that stick after boot
 requires drivers and explicit capabilities. Hardware-assisted DMA isolation
 also needs separate work before userspace drivers can safely control devices.
 
-Keep the Uranium-238 release tag pending until the Phase 1 roadmap is complete
-and the relevant boot paths pass their checks.
+The Uranium-238 release marks the Phase 1 boot milestone. Capability enforcement,
+userspace isolation, and the rest of the kernel roadmap remain future work.

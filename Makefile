@@ -1,6 +1,6 @@
 KERNEL := wolfram/target/riscv64gc-unknown-none-elf/debug/wolfram
 
-.PHONY: all build run debug x86-preview x86-smoke clean
+.PHONY: all build run debug x86-preview x86-smoke x86-iso clean
 
 all: build
 
@@ -29,6 +29,9 @@ x86-preview:
 
 x86-smoke:
 	scripts/x86-smoke.sh
+
+x86-iso:
+	scripts/x86-iso.sh
 
 clean:
 	cd wolfram && cargo clean
