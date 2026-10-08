@@ -130,5 +130,3 @@ in the model card if we ever train something on Wolfram's codebase.
 You built part of a kernel. That should be on your GitHub forever.
 
 ---
-
-*W —*
