@@ -2,6 +2,8 @@ name: UEFI ISO
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'Uranium-*'
   workflow_dispatch:
@@ -19,7 +21,7 @@ jobs:
       - name: Install ISO tools
         run: |
           sudo apt-get update
-          sudo apt-get install --yes xorriso dosfstools mtools
+          sudo apt-get install --yes ripgrep xorriso dosfstools mtools
 
       - name: Install Rust nightly
         uses: dtolnay/rust-toolchain@nightly
