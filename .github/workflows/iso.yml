@@ -1,0 +1,55 @@
+name: UEFI ISO
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'Uranium-*'
+  workflow_dispatch:
+    inputs:
+      publish_release_tag:
+        description: Existing or new release tag to attach the ISO to (blank builds an artifact only)
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-iso:
+    name: Build UEFI boot ISO
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ISO tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ripgrep xorriso dosfstools mtools
+
+      - name: Install Rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: x86_64-unknown-none,x86_64-unknown-uefi
+
+      - name: Build ISO
+        run: scripts/x86-iso.sh wolfram.iso
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wolfram-${{ inputs.publish_release_tag || github.ref_name }}-uefi-iso
+          path: wolfram.iso
+          if-no-files-found: error
+
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/') || inputs.publish_release_tag != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.publish_release_tag || github.ref_name }}
+          name: ${{ inputs.publish_release_tag || github.ref_name }}
+          body_path: docs/releases/${{ inputs.publish_release_tag || github.ref_name }}.md
+          overwrite_files: true
+          files: wolfram.iso
