@@ -35,8 +35,9 @@ permissions. The kernel must validate the handoff and must never call UEFI
 boot services afterward.
 
 The release kernel and loader have reached the expected `spawn init` panic in
-QEMU/OVMF. The debug kernel has passed the same boot check. This has not yet
-been tested on the MSI board.
+QEMU/OVMF. The debug kernel has passed the same boot check. The MSI
+B650M-A PRO WIFI has also booted the loader and kernel from USB, initialized
+the physical allocator, and reached the expected diagnosed panic.
 
 Run `make x86-smoke` from the repository root to repeat the debug and release
 boot checks and an opt-in invalid-opcode exception probe. The smoke script
