@@ -1,0 +1,45 @@
+name: UEFI ISO
+
+on:
+  push:
+    tags:
+      - 'Uranium-*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-iso:
+    name: Build UEFI boot ISO
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ISO tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ripgrep xorriso dosfstools mtools
+
+      - name: Install Rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: x86_64-unknown-none,x86_64-unknown-uefi
+
+      - name: Build ISO
+        run: scripts/x86-iso.sh wolfram.iso
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wolfram-${{ github.ref_name }}-uefi-iso
+          path: wolfram.iso
+          if-no-files-found: error
+
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: wolfram.iso
