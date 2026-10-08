@@ -4,7 +4,7 @@
 use core::cell::UnsafeCell;
 use core::sync::atomic::{AtomicBool, Ordering};
 
-use crate::arch::device_tree::{DeviceTree, Region};
+use crate::boot_info::{BootInfo, MemoryRegion, MEMORY_RESERVED, MEMORY_USABLE};
 
 const PAGE_SIZE: usize = 4096;
 const WORDS: usize = 16_384;
@@ -79,7 +79,7 @@ impl State {
         }
     }
 
-    fn reserve(&mut self, region: Region) {
+    fn reserve(&mut self, region: MemoryRegion) {
         let start = region.start.max(self.base as u64);
         let end = region.end.min((self.base + self.frames * PAGE_SIZE) as u64);
         if start >= end {
@@ -93,6 +93,26 @@ impl State {
         }
     }
 
+    fn release(&mut self, region: MemoryRegion) {
+        let start = region.start.max(self.base as u64);
+        let end = region.end.min((self.base + self.frames * PAGE_SIZE) as u64);
+        if start >= end {
+            return;
+        }
+        // A page is usable only if the entire page lies in the supplied range.
+        let first = ((start as usize) - self.base).div_ceil(PAGE_SIZE);
+        let last = ((end as usize) - self.base) / PAGE_SIZE;
+        for index in first..last {
+            let bit = 1u64 << (index % 64);
+            let word = &mut self.used[index / 64];
+            if *word & bit != 0 {
+                *word &= !bit;
+                self.permanent[index / 64] &= !bit;
+                self.free += 1;
+            }
+        }
+    }
+
     fn stats(&self) -> MemoryStats {
         MemoryStats {
             start: self.base,
@@ -102,26 +122,40 @@ impl State {
     }
 }
 
-/// Initialize from the firmware FDT. Only the RAM bank containing the kernel
-/// is managed; unsupported layouts fail rather than risking reserved memory.
-pub fn init(device_tree: usize) -> MemoryStats {
-    // SAFETY: the SBI boot contract supplies a mapped FDT in a1.
-    let tree = unsafe { DeviceTree::from_ptr(device_tree) }
+/// Initialize from a validated boot handoff. A single RAM bank of up to 4 GiB
+/// is managed for Phase 1. Reserved ranges override usable ranges.
+pub fn init_from_boot_info(info: &BootInfo) -> MemoryStats {
+    info.validate()
         .unwrap_or_else(|e| panic!("physical memory detection: {}", e));
-    extern "C" {
-        static __kernel_start: u8;
-        static __kernel_end: u8;
-    }
-    let kernel_start = &raw const __kernel_start as usize;
-    let kernel_end = &raw const __kernel_end as usize;
+    // SAFETY: the architecture boot contract guarantees the array's lifetime
+    // and identity mapping until this function completes.
+    let regions = unsafe { info.regions() };
     let mut bank = None;
-    tree.memory_regions(|region| {
-        if region.start <= kernel_start as u64 && region.end >= kernel_end as u64 {
-            bank = Some(region);
+    for &region in regions {
+        assert!(region.start < region.end, "invalid boot memory range");
+        assert!(
+            region.kind == MEMORY_USABLE || region.kind == MEMORY_RESERVED,
+            "invalid boot memory kind"
+        );
+        if region.kind != MEMORY_USABLE {
+            continue;
         }
-    })
-    .unwrap_or_else(|e| panic!("physical memory detection: {}", e));
-    let bank = bank.expect("no FDT RAM bank contains the kernel");
+        let contains_kernel = region.start <= info.kernel_start && region.end >= info.kernel_end;
+        match bank {
+            None => bank = Some(region),
+            Some(current) => {
+                let current_contains = current.start <= info.kernel_start
+                    && current.end >= info.kernel_end;
+                if (contains_kernel && !current_contains)
+                    || (contains_kernel == current_contains
+                        && region.end - region.start > current.end - current.start)
+                {
+                    bank = Some(region);
+                }
+            }
+        }
+    }
+    let bank = bank.expect("no usable RAM bank in boot memory map");
     let start = usize::try_from(bank.start).expect("RAM address does not fit usize");
     let end = usize::try_from(bank.end).expect("RAM end does not fit usize");
     let base = start
@@ -132,33 +166,52 @@ pub fn init(device_tree: usize) -> MemoryStats {
         base.checked_add(MAX_FRAMES * PAGE_SIZE)
             .expect("RAM span overflow"),
     ) & !(PAGE_SIZE - 1);
-    assert!(
-        kernel_end < managed_end,
-        "kernel lies outside bitmap capacity"
-    );
+    assert!(managed_end > base, "RAM bank has no complete pages");
+    if bank.start <= info.kernel_start && bank.end >= info.kernel_end {
+        assert!(info.kernel_end <= managed_end as u64, "kernel lies outside bitmap capacity");
+    }
     let frames = (managed_end - base) / PAGE_SIZE;
 
     ALLOCATOR.with(|state| {
         assert!(!state.initialized, "physical allocator initialized twice");
         state.base = base;
         state.frames = frames;
-        // All frames begin permanently reserved. Release only full pages after
-        // the linker-aligned kernel end, then apply firmware reservations.
-        let first_free = (kernel_end - base) / PAGE_SIZE;
-        for index in first_free..frames {
-            let mask = !(1u64 << (index % 64));
-            state.used[index / 64] &= mask;
-            state.permanent[index / 64] &= mask;
-            state.free += 1;
+        // The bitmap starts unavailable. Only explicit usable ranges can
+        // release complete frames, then all reservations are reapplied.
+        for &region in regions {
+            if region.kind == MEMORY_USABLE {
+                state.release(region);
+            }
         }
-        state.reserve(Region {
-            start: device_tree as u64,
-            end: device_tree
-                .checked_add(tree.size())
-                .expect("FDT address overflow") as u64,
-        });
-        tree.reserved_regions(|region| state.reserve(region))
-            .unwrap_or_else(|e| panic!("physical memory reservations: {}", e));
+        for &region in regions {
+            if region.kind == MEMORY_RESERVED {
+                state.reserve(region);
+            }
+        }
+        state.reserve(MemoryRegion::reserved(info.kernel_start, info.kernel_end));
+        state.reserve(MemoryRegion::reserved(
+            info as *const BootInfo as u64,
+            (info as *const BootInfo as u64)
+                .checked_add(core::mem::size_of::<BootInfo>() as u64)
+                .expect("boot information range overflow"),
+        ));
+        state.reserve(MemoryRegion::reserved(
+            info.memory_regions,
+            info.memory_regions
+                .checked_add(regions.len() as u64 * core::mem::size_of::<MemoryRegion>() as u64)
+                .expect("boot memory map range overflow"),
+        ));
+        if info.framebuffer.base != 0 && info.framebuffer.size != 0 {
+            state.reserve(MemoryRegion::reserved(
+                info.framebuffer.base,
+                info.framebuffer.base
+                    .checked_add(info.framebuffer.size)
+                    .expect("framebuffer range overflow"),
+            ));
+        }
+        // Keep the first frame permanently unavailable. This also catches
+        // accidental use of a bank boundary as a freeable frame.
+        state.reserve(MemoryRegion::reserved(base as u64, (base + PAGE_SIZE) as u64));
         state.initialized = true;
         state.stats()
     })
