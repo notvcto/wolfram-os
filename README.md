@@ -153,10 +153,10 @@ x86-64 UEFI PC target:
 - [x] Expected `spawn init` panic in debug and release QEMU/OVMF builds
 - [x] Exercise unexpected x86 exceptions and verify their diagnostics
 - [x] Repeatable x86 QEMU smoke check for debug, release, and exception builds
-- [ ] USB boot to the same diagnostics on the MSI B650M-A PRO WIFI
+- [ ] USB boot to the same diagnostics on bare metal
 
 See the [Phase 1 boot plan](docs/boot-plan.md) for sequence and acceptance
-criteria. Phase 1 is complete when both QEMU ports and the MSI test machine
+criteria. Phase 1 is complete when both QEMU ports and the test machine
 reach a diagnosed, intentional panic without a silent reset.
 
 **Phase 2 — Kernel Core**
@@ -221,7 +221,7 @@ debug and release kernel builds. `make x86-smoke` also checks a deliberate
 invalid-opcode exception and its panic diagnostics. `scripts/x86-preview.sh`
 builds the actual bare-metal kernel and checks the ELF that the loader expects;
 see the [UEFI loader notes](boot/uefi/README.md) for build and packaging steps.
-The MSI board has not booted this path yet.
+The test board has not booted this path yet.
 
 ---
 
