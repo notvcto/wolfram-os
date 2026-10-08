@@ -1,30 +1,22 @@
-OUTPUT_ARCH(riscv)
 ENTRY(_start)
 
-BASE_ADDRESS = 0x80200000;
-
 SECTIONS {
-    . = BASE_ADDRESS;
+    . = 0;
     __kernel_start = .;
 
-    .text : {
+    .text : ALIGN(4096) {
         *(.text.entry)
         *(.text .text.*)
     }
-
-    .rodata : {
+    .rodata : ALIGN(4096) {
         *(.rodata .rodata.*)
     }
-
-    .data : {
+    .data : ALIGN(4096) {
         *(.data .data.*)
     }
-
-    .bss : {
-        sbss = .;
+    .bss : ALIGN(4096) {
         *(.bss .bss.*)
-        *(.sbss .sbss.*)
-        ebss = .;
+        *(COMMON)
     }
 
     . = ALIGN(4096);
