@@ -45,7 +45,7 @@ fn classify(s: &StackStr) -> &'static str {
     if s.contains("spawn init") {
         return "init does not exist yet.\n  \
                 that's expected. that's Phase 1.\n  \
-                the kernel booted. serial works. panic screen works.\n  \
+                the kernel booted. boot output works. panic screen works.\n  \
                 day one.";
     }
     if s.contains("oom") || s.contains("allocate") {
@@ -67,10 +67,18 @@ fn classify(s: &StackStr) -> &'static str {
 }
 
 fn sign_off(s: &StackStr) -> &'static str {
-    if s.contains("spawn init") { return "it begins."; }
-    if s.contains("capability") { return "we owe you one."; }
-    if s.contains("stack")      { return "turtles all the way down."; }
-    if s.contains("oom")        { return "memory is finite. who knew."; }
+    if s.contains("spawn init") {
+        return "it begins.";
+    }
+    if s.contains("capability") {
+        return "we owe you one.";
+    }
+    if s.contains("stack") {
+        return "turtles all the way down.";
+    }
+    if s.contains("oom") {
+        return "memory is finite. who knew.";
+    }
     "we'll figure out what we did."
 }
 
@@ -88,7 +96,12 @@ struct StackStr {
 }
 
 impl StackStr {
-    fn new() -> Self { Self { buf: [0u8; 256], len: 0 } }
+    fn new() -> Self {
+        Self {
+            buf: [0u8; 256],
+            len: 0,
+        }
+    }
 
     fn contains(&self, needle: &str) -> bool {
         let s = core::str::from_utf8(&self.buf[..self.len]).unwrap_or("");
