@@ -7,7 +7,7 @@ kernel_repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$kernel_repo_root/wolfram"
 
 target=x86_64-unknown-none
-if ! rustup target list --installed | rg -qx "$target"; then
+if ! rustup target list --installed --toolchain nightly | rg -qx "$target"; then
     echo "install the bare-metal target first: rustup target add $target --toolchain nightly" >&2
     exit 1
 fi
