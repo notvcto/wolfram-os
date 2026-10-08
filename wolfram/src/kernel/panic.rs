@@ -45,7 +45,7 @@ fn classify(s: &StackStr) -> &'static str {
     if s.contains("spawn init") {
         return "init does not exist yet.\n  \
                 that's expected. that's Phase 1.\n  \
-                the kernel booted. serial works. panic screen works.\n  \
+                the kernel booted. boot output works. panic screen works.\n  \
                 day one.";
     }
     if s.contains("oom") || s.contains("allocate") {
