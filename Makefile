@@ -1,13 +1,13 @@
 KERNEL := wolfram/target/riscv64gc-unknown-none-elf/debug/wolfram
 
-.PHONY: all run debug clean
+.PHONY: all build run debug x86-preview x86-smoke x86-iso clean
 
-all: $(KERNEL)
+all: build
 
-$(KERNEL):
+build:
 	cd wolfram && cargo build
 
-run: $(KERNEL)
+run: build
 	qemu-system-riscv64 \
 		-machine virt \
 		-nographic \
@@ -15,7 +15,7 @@ run: $(KERNEL)
 		-kernel $(KERNEL) \
 		-m 128M
 
-debug: $(KERNEL)
+debug: build
 	qemu-system-riscv64 \
 		-machine virt \
 		-nographic \
@@ -23,6 +23,15 @@ debug: $(KERNEL)
 		-kernel $(KERNEL) \
 		-m 128M \
 		-s -S
+
+x86-preview:
+	scripts/x86-preview.sh
+
+x86-smoke:
+	scripts/x86-smoke.sh
+
+x86-iso:
+	scripts/x86-iso.sh
 
 clean:
 	cd wolfram && cargo clean
