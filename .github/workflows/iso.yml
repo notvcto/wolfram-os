@@ -38,7 +38,7 @@ jobs:
         run: scripts/x86-iso.sh wolfram.iso
 
       - name: Upload ISO artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: wolfram-${{ inputs.publish_release_tag || github.ref_name }}-uefi-iso
           path: wolfram.iso
