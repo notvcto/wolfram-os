@@ -40,7 +40,11 @@ pub struct CapNode {
 
 impl CapNode {
     pub fn new(id: u32, rights: Rights) -> Self {
-        Self { id, valid: AtomicBool::new(true), rights }
+        Self {
+            id,
+            valid: AtomicBool::new(true),
+            rights,
+        }
     }
 
     /// Revoke this node. Every handle through it dies immediately.
@@ -52,7 +56,9 @@ impl CapNode {
         self.valid.load(Ordering::Acquire)
     }
 
-    pub fn rights(&self) -> Rights { self.rights }
+    pub fn rights(&self) -> Rights {
+        self.rights
+    }
 }
 
 pub fn init() {

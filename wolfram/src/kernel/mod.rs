@@ -1,6 +1,6 @@
 pub mod capabilities;
-pub mod memory;
-pub mod scheduler;
 pub mod ipc;
+pub mod memory;
 pub mod panic;
+pub mod scheduler;
 pub mod syscall;
