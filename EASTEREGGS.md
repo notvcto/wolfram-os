@@ -23,7 +23,6 @@ okqjz hega pda owia lanokj snkpa ep.
 Pda rkeya eo:
   znu, jkp ownywopey
   oahb-wswna, pda ganjah gjkso sdwp ep eo
-  wyykqjpwxha, S oecjo kbb kj oanekqo pdejco
   lnayeoa, araj fkgao wna paydjeywhhu wyyqnwpa
   jaran pnu-dwnz, eb ukq dwra pk atlhwej ep, ep'o jkp bqjju
 
@@ -42,9 +41,6 @@ Pdejco pdwp zkj'p bep:
   wjupdejc iawj pk pda qoan (znu eo jkp iawj)
   wjupdejc pdwp jaazo atlhwejejc pk hwjz
 
-Pda S oecjkbb eo jkp zayknwpekj. Ep wllawno kj oanekqo paniejwh annkno wjz
-wqpkiwpey zajewho kjhu. Jkp kj ywoqwh kqplqp. Jkp kj aranu iaoowca. Ep iawjo
-pda ganjah eo pwgejc naolkjoexehepu bkn okiapdejc. Qoa ep wyyknzejchu.
 
 ---
 
@@ -105,7 +101,7 @@ ban dahl ywhhaz nalawpazhu ej kja oaooekj:
   t20: nalnejpo pda ykiiwjz psajpu peiao pk odks sdwp ep hkkgo hega bnki kqn oeza.
   t25: wogo eb ukq wna kgwu. cajqejahu. lnkrezao zeoyknz hejg.
   t50: pahho ukq pk klaj w LN. ukq'ra yhawnhu nawz pda dahl patp ajkqcd pk ykjpnexqpa.
-       "S - sa'na nkkpejc bkn ukq. cajqejahu."
+       "sa'na nkkpejc bkn ukq. cajqejahu."
 
 ban lo ywhhaz nalawpazhu:
   t10: "pda lnkyaoo heop dwo jkp ydwjcaz oecjebeywjphu oejya hwop peia."
@@ -118,7 +114,7 @@ ban lo ywhhaz nalawpazhu:
 
 XKKP:
   oanewh hkc, benop heja xabkna wjupdejc ahoa:
-  "S - ckkz iknjejc. lnkxwxhu."
+  "ckkz iknjejc. lnkxwxhu."
   peju. awou pk ieoo. whswuo pdana.
 
 QLPEIA:
