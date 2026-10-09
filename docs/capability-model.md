@@ -192,4 +192,3 @@ Wolfram:   file_read(passwd_handle)
 
 The simplicity isn't a compromise. It's a consequence of getting the model right.
 
-*W —*
