@@ -44,7 +44,7 @@ fn kernel_start(
     board: &str,
     init_memory: impl FnOnce() -> kernel::memory::bitmap::MemoryStats,
 ) -> ! {
-    kprintln!("W — good morning. probably.");
+    kprintln!("good morning. probably.");
     kprintln!();
     kprintln!("Wolfram/0.1.0 (Uranium-238)");
     kprintln!("capability-based microkernel — {}", board);

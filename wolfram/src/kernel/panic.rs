@@ -1,7 +1,7 @@
 //! Wolfram Kernel Panic Handler
 //!
 //! Informative. Honest. Occasionally funny.
-//! Always ends with W —
+//! Always ends with a signoff.
 //!
 //! The panic count exists so you know it's not just you.
 
@@ -34,7 +34,7 @@ pub fn kernel_panic(info: &core::panic::PanicInfo) -> ! {
     kprintln!();
     kprintln!("  github.com/notvcto/wolfram-os/issues");
     kprintln!();
-    kprintln!("W — {}", sign_off(&s));
+    kprintln!("  {}", sign_off("W — {}", sign_off(&s)s));
     kprintln!("════════════════════════════════════════════");
 
     loop {
