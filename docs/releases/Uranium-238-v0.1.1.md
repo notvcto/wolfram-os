@@ -1,4 +1,4 @@
-# Phase 2 Capability Foundation (v0.1.1)
+# Uranium-238 v0.1.1
 
 This release ships the structural foundation for the Wolfram Phase 2 capability system, resolving architectural discrepancies and setting up the type-safe enforcement layer.
 
