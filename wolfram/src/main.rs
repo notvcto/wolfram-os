@@ -3,8 +3,8 @@
 //! This is where the kernel starts. Everything before this
 //! was the bootloader's problem. Everything after this is ours.
 //!
-//! Phase 1 goal: boot, print something, don't triple fault.
-//! Current status: working on it.
+//! Phase 1 status: complete.
+//! Current phase: Phase 2 (Kernel Core).
 
 #![no_std]
 #![no_main]

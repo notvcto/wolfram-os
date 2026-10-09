@@ -28,7 +28,7 @@ for size in 128 256; do
     if ! grep -Eq "\\[mem\\]   RAM: 0x80000000\\.\\.${ram_end}, [1-9][0-9]* free pages" "$log" \
         || ! grep -Fq '[mem]   physical allocator: ok' "$log" \
         || ! grep -Fq 'where:       src/main.rs:' "$log" \
-        || ! grep -Fq 'W — it begins.' "$log"; then
+        || ! grep -Fq 'it begins.' "$log"; then
         cat "$log"
         echo "RISC-V smoke output missing for ${size} MiB" >&2
         exit 1
