@@ -34,7 +34,7 @@ pub fn kernel_panic(info: &core::panic::PanicInfo) -> ! {
     kprintln!();
     kprintln!("  github.com/notvcto/wolfram-os/issues");
     kprintln!();
-    kprintln!("  {}", sign_off("W — {}", sign_off(&s)s));
+    kprintln!("  {}", sign_off(&s));
     kprintln!("════════════════════════════════════════════");
 
     loop {
