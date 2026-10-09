@@ -118,7 +118,7 @@ the same person wrote them. A person who cares deeply about the project
 and has a dark sense of humor about kernel development.
 
 If you're writing user-facing output, read the existing messages first.
-Match the tone. `W —` signs off on serious things. Keep that consistent.
+Match the tone.
 
 ---
 
