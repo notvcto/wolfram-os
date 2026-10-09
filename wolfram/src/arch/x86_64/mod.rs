@@ -2,6 +2,7 @@
 
 pub mod console;
 pub mod trap;
+pub mod syscall;
 
 use crate::boot_info::BootInfo;
 
