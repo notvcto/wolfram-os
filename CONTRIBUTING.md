@@ -23,8 +23,8 @@ Open a PR. Docs are code.
 ## What To Work On
 
 Check the roadmap in README.md. If something isn't checked off, it needs doing.
-If you don't know where to start, `Phase 1` items are the most approachable.
-Getting the kernel to boot is a rite of passage. Help us not triple fault.
+If you don't know where to start, `Phase 2` items are the most approachable.
+Help us build out the core kernel functionality like the capability system and IPC.
 
 For larger contributions, open an issue first and describe what you're doing.
 Not because we'll say no. Because coordination prevents two people building

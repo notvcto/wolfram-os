@@ -73,10 +73,15 @@ impl KernelObject for Resource { fn type_name(&self) -> &'static str { "Resource
 
 /// Marker traits for compile-time rights enforcement.
 /// Each right type is an uninhabited ZST.
+pub trait RightMarker {}
 pub struct Read;
+impl RightMarker for Read {}
 pub struct Write;
+impl RightMarker for Write {}
 pub struct ReadWrite;
+impl RightMarker for ReadWrite {}
 pub struct Execute;
+impl RightMarker for Execute {}
 
 /// A typed, rights-annotated handle to a kernel object.
 ///
@@ -85,13 +90,35 @@ pub struct Execute;
 ///
 /// The handle also carries a CapNode pointer for runtime enforcement
 /// at the syscall boundary.
-pub struct Handle<T: KernelObject, R> {
+pub struct Handle<T: KernelObject, R: RightMarker> {
     /// Index into the owning process's handle table.
     raw: u32,
     /// Pointer to the capability node backing this handle.
     node: NonNull<CapNode>,
     _type: PhantomData<T>,
     _rights: PhantomData<R>,
+}
+
+impl<T: KernelObject, R: RightMarker> Handle<T, R> {
+    pub fn new(raw: u32, node: NonNull<CapNode>) -> Self {
+        Self { raw, node, _type: PhantomData, _rights: PhantomData }
+    }
+
+    pub fn raw(&self) -> u32 { self.raw }
+    
+    pub fn node(&self) -> &CapNode { unsafe { self.node.as_ref() } }
+
+    /// Create an attenuated capability node from this handle's node.
+    /// The caller is responsible for inserting the new node into a HandleTable.
+    pub fn attenuate<NewR: RightMarker>(&self, new_rights: Rights, allocator: &mut CapNodeAllocator) -> Result<Handle<T, NewR>, CapError> {
+        let child = self.node().attenuate(new_rights, allocator)?;
+        Ok(Handle {
+            raw: u32::MAX, // Indicates it's unmapped in the table
+            node: child,
+            _type: PhantomData,
+            _rights: PhantomData,
+        })
+    }
 }
 
 /// A capability node — the indirection layer between handles and kernel objects.
