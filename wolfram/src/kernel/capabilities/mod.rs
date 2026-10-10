@@ -210,5 +210,6 @@ impl CapNode {
 pub fn init() {
     // Initialize the global capability node allocator.
     // The allocator pool is backed by pages from the bitmap allocator.
+    #[allow(static_mut_refs)]
     unsafe { CAP_NODE_ALLOCATOR.init() };
 }
