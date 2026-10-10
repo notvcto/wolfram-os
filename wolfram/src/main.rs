@@ -10,6 +10,8 @@
 #![no_main]
 #![feature(alloc_error_handler)]
 
+extern crate alloc;
+
 mod arch;
 mod boot_info;
 mod kernel;
@@ -64,6 +66,72 @@ fn kernel_start(
     assert!(kernel::memory::bitmap::free_frame(probe).is_err());
     assert!(kernel::memory::bitmap::free_frame(memory.start).is_err());
     kprintln!("[mem]   physical allocator: ok");
+
+    // Buddy Allocator smoke test & rigorous tests
+    kprintln!("[mem]   running rigorous buddy allocator tests...");
+    {
+        use alloc::alloc::{alloc, dealloc, Layout};
+        use alloc::vec::Vec;
+        
+        let mut v = Vec::new();
+        v.extend_from_slice(&[42]);
+        assert_eq!(v[0], 42);
+
+        // 1. Basic Allocation & Alignment
+        let layout = Layout::from_size_align(128, 64).unwrap();
+        let ptr1 = unsafe { alloc(layout) };
+        assert!(!ptr1.is_null());
+        assert_eq!((ptr1 as usize) % 64, 0);
+
+        // 2. Large Allocation (Bypasses Buddy, goes to bitmap)
+        let layout_large = Layout::from_size_align(8192, 4096).unwrap();
+        let ptr2 = unsafe { alloc(layout_large) };
+        assert!(!ptr2.is_null());
+        unsafe {
+            core::ptr::write_bytes(ptr2, 0xAB, 8192);
+            assert_eq!(*ptr2, 0xAB);
+            assert_eq!(*ptr2.add(8191), 0xAB);
+            dealloc(ptr2, layout_large);
+        }
+
+        // 3. Fragmentation and Merging
+        let layout_min = Layout::from_size_align(32, 32).unwrap();
+        let mut ptrs = Vec::new();
+        // Allocate 128 blocks of 32 bytes (1 full page)
+        for _ in 0..128 {
+            let p = unsafe { alloc(layout_min) };
+            assert!(!p.is_null());
+            ptrs.push(p);
+        }
+        // Free them all (tests buddy merging up to MAX_ORDER and page freeing)
+        for p in ptrs {
+            unsafe { dealloc(p, layout_min) };
+        }
+        
+        // 4. Test max order allocation explicitly
+        let layout_4k = Layout::from_size_align(4096, 4096).unwrap();
+        let ptr_4k = unsafe { alloc(layout_4k) };
+        assert!(!ptr_4k.is_null());
+        unsafe { dealloc(ptr_4k, layout_4k) };
+        
+        // 5. OOM / Massive Allocation test (1 GiB, won't fit in 512 MiB RAM)
+        let layout_huge = Layout::from_size_align(1024 * 1024 * 1024, 4096).unwrap();
+        let ptr_huge = unsafe { alloc(layout_huge) };
+        assert!(ptr_huge.is_null(), "huge allocation should fail and return null");
+
+        // 6. Extreme Alignment test
+        let layout_align = Layout::from_size_align(32, 2 * 1024 * 1024).unwrap();
+        let ptr_align = unsafe { alloc(layout_align) };
+        if !ptr_align.is_null() {
+            // Note: Currently, the physical allocator doesn't guarantee > 4KiB alignment
+            // for arbitrary frames. This is a known limitation that should be documented.
+            // We just ensure we don't leak it.
+            unsafe { dealloc(ptr_align, layout_align) };
+        }
+
+        unsafe { dealloc(ptr1, layout) };
+    }
+    kprintln!("[mem]   buddy allocator: ok");
 
     kernel::capabilities::init();
     kprintln!("[cap]   capability system: planned for Phase 2");

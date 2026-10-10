@@ -246,28 +246,69 @@ pub fn allocate_frame() -> Option<usize> {
     })
 }
 
+/// Returns the physical address of contiguous free 4 KiB frames.
+pub fn allocate_frames(count: usize) -> Option<usize> {
+    if count == 0 { return None; }
+    if count == 1 { return allocate_frame(); }
+
+    ALLOCATOR.with(|state| {
+        assert!(state.initialized, "physical allocator used before init");
+        if state.free < count {
+            return None;
+        }
+        let mut contiguous = 0;
+        let mut start_index = 0;
+        for i in 0..state.frames {
+            let word = state.used[i / 64];
+            let bit = 1u64 << (i % 64);
+            if word & bit != 0 {
+                contiguous = 0;
+            } else {
+                if contiguous == 0 {
+                    start_index = i;
+                }
+                contiguous += 1;
+                if contiguous == count {
+                    for j in 0..count {
+                        state.set_used(start_index + j);
+                    }
+                    return Some(state.base + start_index * PAGE_SIZE);
+                }
+            }
+        }
+        None
+    })
+}
+
 pub fn free_frame(address: usize) -> Result<(), &'static str> {
+    free_frames(address, 1)
+}
+
+pub fn free_frames(address: usize, count: usize) -> Result<(), &'static str> {
     ALLOCATOR.with(|state| {
         if !state.initialized {
             return Err("physical allocator used before init");
         }
-        if address < state.base
-            || address >= state.base + state.frames * PAGE_SIZE
-            || !address.is_multiple_of(PAGE_SIZE)
-        {
-            return Err("frame outside managed RAM or unaligned");
+        for i in 0..count {
+            let addr = address + i * PAGE_SIZE;
+            if addr < state.base
+                || addr >= state.base + state.frames * PAGE_SIZE
+                || !addr.is_multiple_of(PAGE_SIZE)
+            {
+                return Err("frame outside managed RAM or unaligned");
+            }
+            let index = (addr - state.base) / PAGE_SIZE;
+            let bit = 1u64 << (index % 64);
+            if state.permanent[index / 64] & bit != 0 {
+                return Err("frame is reserved");
+            }
+            let word = &mut state.used[index / 64];
+            if *word & bit == 0 {
+                return Err("frame is already free");
+            }
+            *word &= !bit;
+            state.free += 1;
         }
-        let index = (address - state.base) / PAGE_SIZE;
-        let bit = 1u64 << (index % 64);
-        if state.permanent[index / 64] & bit != 0 {
-            return Err("frame is reserved");
-        }
-        let word = &mut state.used[index / 64];
-        if *word & bit == 0 {
-            return Err("frame is already free");
-        }
-        *word &= !bit;
-        state.free += 1;
         Ok(())
     })
 }

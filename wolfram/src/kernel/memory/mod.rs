@@ -64,3 +64,4 @@ pub fn init(device_tree: usize) -> bitmap::MemoryStats {
     let info = BootInfo::new(&regions[..len], kernel_start, kernel_end);
     bitmap::init_from_boot_info(&info)
 }
+pub mod heap;

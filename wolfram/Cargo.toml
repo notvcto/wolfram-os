@@ -1,6 +1,6 @@
 [package]
 name = "wolfram"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["notvcto <vic@notvc.to>"]
 description = "Wolfram kernel — capability-based microkernel for RISC-V"

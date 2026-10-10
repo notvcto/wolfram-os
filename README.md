@@ -164,7 +164,7 @@ test machine reach a diagnosed, intentional panic without a silent reset.
 **Phase 2 — Kernel Core**
 - [ ] Capability system
 - [ ] Virtual memory + VMOs
-- [ ] Buddy allocator
+- [x] Buddy allocator
 - [ ] Process/thread model (no fork)
 - [ ] Job tree
 - [ ] Async channels
