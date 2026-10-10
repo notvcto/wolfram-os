@@ -23,7 +23,7 @@ impl CapNodeAllocator {
     }
 
     pub fn alloc(&mut self, node: CapNode) -> Result<NonNull<CapNode>, ()> {
-        for (_i, slot) in self.nodes.iter_mut().enumerate() {
+        for slot in self.nodes.iter_mut() {
             if slot.is_none() {
                 *slot = Some(node);
                 // In a real buddy/slab allocator we'd use raw pointers and init.
